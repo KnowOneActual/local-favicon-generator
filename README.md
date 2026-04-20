@@ -11,16 +11,18 @@
   <img src="https://img.shields.io/badge/maintained-yes-blue.svg" alt="Maintained">
 </p>
 
-Generate complete favicon packages locally — no external services required. Replicates the core functionality of [RealFaviconGenerator.net](https://realfavicongenerator.net/) entirely offline.
+Generate complete favicon packages locally — no external services required. Follows modern 2025 best practices (SVG primary, PNG/WebP fallbacks, PWA support) entirely offline.
 
 ## Features
 
-- **Multi-resolution ICO** — Generates favicon.ico with 16, 32, 48, and 64px sizes embedded
-- **Apple Touch Icon** — 180x180px PNG for iOS home screen
-- **PWA Manifest** — Generates site.webmanifest for Android/PWA support
-- **HTML Snippet** — Outputs ready-to-use `<link>` tags for your `<head>`
-- **Multiple Formats** — PNG, WebP, SVG output at custom sizes
-- **Transparency Support** — Handles alpha channels properly
+- **SVG Primary** — Scalable vector icon for modern browsers (Chrome, Firefox, Edge)
+- **Autocrop (Trim)** — Automatically removes transparent borders to ensure your icon fills the tab (no more "stumpy" icons)
+- **Modern Fallbacks** — 32x32 PNG and WebP for broad compatibility
+- **Apple Touch Icon** — 180x180px solid PNG for iOS home screen
+- **PWA Manifest** — Generates site.webmanifest with 192px and 512px icons for Android/PWA
+- **Legacy ICO** — 32x32 ICO fallback for legacy tools
+- **HTML Snippet** — Outputs a modern "Bulletproof" `<link>` tag set
+- **Transparency Support** — Intelligent handling (solid for iOS, transparent for desktop)
 
 ## Installation
 
@@ -65,12 +67,13 @@ Running with `--favicon_package` generates:
 
 ```
 output/
-├── favicon.ico              # Multi-resolution (16,32,48,64px)
-├── favicon-32x32.png        # 32x32 PNG
-├── favicon-96x96.png        # 96x96 PNG
-├── favicon.svg              # SVG vector
-├── favicon.webp             # WebP format
-├── apple-touch-icon.png     # 180x180 for iOS
+├── favicon.svg              # Primary vector icon
+├── favicon.ico              # 32x32 legacy fallback
+├── favicon-32x32.png        # Standard PNG fallback
+├── favicon-32x32.webp       # Future-proof WebP fallback
+├── apple-touch-icon.png     # 180x180 solid for iOS
+├── web-app-manifest-192x192.png # Android home screen
+├── web-app-manifest-512x512.png # PWA splash screen
 ├── site.webmanifest         # PWA manifest
 ├── favicon-tags.html       # HTML <link> tags
 └── favicon-code.txt        # Plain code to paste in your <head>
@@ -149,11 +152,12 @@ python favicon_gen.py input/favicon.png --favicon_package --theme_color "#1a73e8
 Open `favicon-code.txt` — copy the lines into your `<head>`:
 
 ```html
-<link rel="icon" type="image/png" href="/img/favicon/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="/img/favicon/favicon.svg" />
-<link rel="shortcut icon" href="/img/favicon/favicon.ico" />
-<link rel="apple-touch-icon" sizes="180x180" href="/img/favicon/apple-touch-icon.png" />
-<link rel="manifest" href="/img/favicon/site.webmanifest" />
+<link rel="icon" type="image/svg+xml" href="/img/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon/favicon-32x32.png">
+<link rel="icon" type="image/webp" sizes="32x32" href="/img/favicon/favicon-32x32.webp">
+<link rel="alternate icon" href="/img/favicon/favicon.ico">
+<link rel="manifest" href="/img/favicon/site.webmanifest">
+<link rel="apple-touch-icon" href="/img/favicon/apple-touch-icon.png">
 ```
 
 Extract the package to `<site>/img/favicon/` and update the paths as needed.

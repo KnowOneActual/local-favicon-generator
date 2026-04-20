@@ -5,31 +5,19 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- Complete favicon package generation (`--favicon_package`)
-  - Multi-resolution ICO (16, 32, 48, 64px embedded in one file)
-  - Apple Touch Icon (180x180px for iOS)
-  - PWA site.webmanifest with customizable name, colors
-  - HTML favicon tags for `<head>` insertion
-- `--favicon_path` argument to specify favicon storage path (default: `/img/favicon`)
-- `--site_name`, `--short_name`, `--theme_color`, `--bg_color` for PWA manifest customization
-- `favicon-code.txt` — plain text file with `<link>` tags ready to copy-paste
-- WebP format output (32x32, 96x96) alongside PNG
-- Input validation with helpful error messages
-- Color hex validation
-- Auto theme color extraction from input image (`--auto`)
-  - Uses dominant color algorithm for accurate matching
-  - Runs by default when using `--favicon_package`
-- Interactive CLI wizard mode
-  - Runs automatically when no arguments provided
-  - Prompts for input image, favicon path, site name, colors
-  - Auto-detects theme color from image
+- Modern 2025 "Bulletproof" favicon package support.
+  - SVG as primary icon for modern browsers.
+  - WebP future-proof fallback support.
+  - Web Application Manifest icons (192x192, 512x512) for Android/PWA.
+  - 32x32 ICO legacy fallback.
+- Added automatic transparency trimming (autocrop) to maximize icon visibility in browser tabs.
+- Added aspect ratio preservation (padding) for non-square input images.
 
 ### Changed
-- Default formats now include `svg` in addition to `png` and `webp`
-- Output paths now use relative paths from web root in HTML/code files
-
-### Fixed
-- Transparency handling for proper alpha channel support
+- Improved SVG generation to use a square `viewBox` and center the image (prevents browser stretching).
+- Updated HTML snippet to prioritize SVG and modern fallbacks, and optimized tag order.
+- Simplified `favicon.ico` to a single 32x32 frame for modern systems.
+- iOS icons now use the site background color for a solid fill (standard practice).
 
 ## [1.0.0] - 2024-04-20
 

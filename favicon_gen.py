@@ -22,11 +22,17 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
 # Constants
-FAVICON_SIZES = [16, 32, 48, 64]
+FAVICON_SIZES = [32] # Standard fallback size for modern ICO
 APPLE_TOUCH_ICON_SIZE = 180
+ANDROID_ICON_SIZES = [192, 512]
 SUPPORTED_FORMATS = {"png", "webp", "jpeg", "svg"}
 DEFAULT_OUTPUT_DIR = "output"
 DEFAULT_FAVICON_PATH = "/img/favicon"
+
+def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
+    """Converts a hex color string to an RGB tuple."""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4)) # type: ignore
 
 
 def extract_dominant_color(image_path: str) -> str:
@@ -101,8 +107,8 @@ def parse_size_string(size_str: str) -> Tuple[int, int]:
         )
 
 
-def generate_favicon_ico(input_image_path: str, output_path: str) -> bool:
-    """Generates a multi-resolution ICO file from input image."""
+def generate_favicon_ico(input_image_path: str, output_path: str, background_color: Tuple[int, int, int, int] = (0, 0, 0, 0)) -> bool:
+    """Generates a multi-resolution ICO file from input image, preserving aspect ratio with background fill."""
     try:
         with Image.open(input_image_path) as img:
             if img.mode != "RGBA":
@@ -110,13 +116,23 @@ def generate_favicon_ico(input_image_path: str, output_path: str) -> bool:
 
             ico_images = []
             for size in FAVICON_SIZES:
-                resized = img.resize((size, size), Image.Resampling.LANCZOS)
-                ico_images.append(resized)
+                # Preserve aspect ratio and pad with background color
+                original_width, original_height = img.size
+                scale = min(size / original_width, size / original_height)
+                new_width = int(original_width * scale)
+                new_height = int(original_height * scale)
+
+                resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                canvas = Image.new("RGBA", (size, size), background_color)
+                x_offset = (size - new_width) // 2
+                y_offset = (size - new_height) // 2
+                canvas.paste(resized, (x_offset, y_offset), resized) # Use resized as mask for proper blending
+
+                ico_images.append(canvas)
 
             ico_images[0].save(
                 output_path,
                 format="ICO",
-                sizes=[(s, s) for s in FAVICON_SIZES],
                 append_images=ico_images[1:],
             )
             logger.info(f"Generated: {output_path}")
@@ -126,10 +142,12 @@ def generate_favicon_ico(input_image_path: str, output_path: str) -> bool:
         return False
 
 
-def generate_apple_touch_icon(input_image_path: str, output_path: str) -> bool:
+def generate_apple_touch_icon(input_image_path: str, output_path: str, background_color: Tuple[int, int, int, int] = (0, 0, 0, 0)) -> bool:
     """Generates Apple touch icon (180x180)."""
     try:
         with Image.open(input_image_path) as img:
+            if img.mode != "RGBA":
+                img = img.convert("RGBA")
             original_width, original_height = img.size
             target_size = APPLE_TOUCH_ICON_SIZE
 
@@ -139,10 +157,10 @@ def generate_apple_touch_icon(input_image_path: str, output_path: str) -> bool:
 
             resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
-            canvas = Image.new("RGBA", (target_size, target_size), (0, 0, 0, 0))
+            canvas = Image.new("RGBA", (target_size, target_size), background_color)
             x_offset = (target_size - new_width) // 2
             y_offset = (target_size - new_height) // 2
-            canvas.paste(resized, (x_offset, y_offset))
+            canvas.paste(resized, (x_offset, y_offset), resized) # Use resized as mask for proper blending
 
             canvas.save(output_path, format="PNG")
             logger.info(f"Generated: {output_path}")
@@ -172,13 +190,13 @@ def generate_site_webmanifest(
             "theme_color": theme_color,
             "icons": [
                 {
-                    "src": f"{favicon_path}/favicon-96x96.png",
-                    "sizes": "96x96",
+                    "src": f"{favicon_path}/web-app-manifest-192x192.png",
+                    "sizes": "192x192",
                     "type": "image/png",
                 },
                 {
-                    "src": f"{favicon_path}/apple-touch-icon.png",
-                    "sizes": "180x180",
+                    "src": f"{favicon_path}/web-app-manifest-512x512.png",
+                    "sizes": "512x512",
                     "type": "image/png",
                 },
             ],
@@ -195,15 +213,18 @@ def generate_site_webmanifest(
 def generate_html_metadata(
     output_dir: str, favicon_dir: str = DEFAULT_FAVICON_PATH
 ) -> bool:
-    """Generates HTML snippet and plain code for favicon integration."""
+    """Generates HTML snippet following modern 2025 best practices."""
     try:
-        snippet = f'''<link rel="icon" type="image/webp" href="{favicon_dir}/favicon-32x32.webp" sizes="32x32" />
-<link rel="icon" type="image/webp" href="{favicon_dir}/favicon-96x96.webp" sizes="96x96" />
-<link rel="icon" type="image/png" href="{favicon_dir}/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="{favicon_dir}/favicon.svg" />
-<link rel="shortcut icon" href="{favicon_dir}/favicon.ico" />
-<link rel="apple-touch-icon" sizes="180x180" href="{favicon_dir}/apple-touch-icon.png" />
-<link rel="manifest" href="{favicon_dir}/site.webmanifest" />
+        # 1. SVG is the primary modern format (scalable, dark mode support)
+        # 2. PNG 32x32 is the reliable fallback for most browsers
+        # 3. ICO is the legacy fallback
+        # 4. WebP is included for future-proofing as requested
+        snippet = f'''<link rel="icon" type="image/svg+xml" href="{favicon_dir}/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="{favicon_dir}/favicon-32x32.png">
+<link rel="icon" type="image/webp" sizes="32x32" href="{favicon_dir}/favicon-32x32.webp">
+<link rel="alternate icon" href="{favicon_dir}/favicon.ico">
+<link rel="manifest" href="{favicon_dir}/site.webmanifest">
+<link rel="apple-touch-icon" href="{favicon_dir}/apple-touch-icon.png">
 '''
         # Write HTML snippet
         with open(os.path.join(output_dir, "favicon-tags.html"), "w") as f:
@@ -227,6 +248,7 @@ def generate_image_variants(
     sizes: Optional[List[Tuple[int, int]]] = None,
     keep_original: bool = True,
     base_name: str = "favicon",
+    background_color: Tuple[int, int, int, int] = (0, 0, 0, 0) # Default to transparent
 ):
     """Generates an image in multiple formats and sizes."""
     formats = formats or ["png", "webp", "svg"]
@@ -251,8 +273,8 @@ def generate_image_variants(
                     scale = min(tw / orig_w, th / orig_h)
                     nw, nh = int(orig_w * scale), int(orig_h * scale)
                     resized = img.resize((nw, nh), Image.Resampling.LANCZOS)
-                    canvas = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
-                    canvas.paste(resized, ((tw - nw) // 2, (th - nh) // 2))
+                    canvas = Image.new("RGBA", (tw, th), background_color)
+                    canvas.paste(resized, ((tw - nw) // 2, (th - nh) // 2), resized) # Use resized as mask
                     out_img = canvas
                     suffix = f"-{tw}x{th}"
                 else:
@@ -268,10 +290,20 @@ def generate_image_variants(
                         out_img.convert("RGB").save(out_path, format=fmt, quality=85)
                     elif fmt == "svg":
                         buf = BytesIO()
-                        out_img.save(buf, format="PNG")
+                        # Ensure we use an RGBA version for the PNG inside SVG
+                        temp_img = out_img
+                        if temp_img.mode != "RGBA":
+                            temp_img = temp_img.convert("RGBA")
+                        temp_img.save(buf, format="PNG")
                         b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-                        svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{tw}" height="{th}">' \
-                              f'<image href="data:image/png;base64,{b64}" width="{tw}" height="{th}"/></svg>'
+                        
+                        # Use a square viewBox and center the image to prevent browser stretching
+                        max_dim = max(tw, th)
+                        x_off = (max_dim - tw) // 2
+                        y_off = (max_dim - th) // 2
+                        
+                        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {max_dim} {max_dim}">' \
+                              f'<image href="data:image/png;base64,{b64}" x="{x_off}" y="{y_off}" width="{tw}" height="{th}"/></svg>'
                         with open(out_path, "w") as f:
                             f.write(svg)
                     else:
@@ -280,6 +312,16 @@ def generate_image_variants(
 
     except Exception as e:
         logger.error(f"Error generating variants: {e}")
+
+
+def trim_image(img: Image.Image) -> Image.Image:
+    """Trim transparent borders from an image."""
+    if img.mode != "RGBA":
+        img = img.convert("RGBA")
+    bbox = img.getbbox()
+    if bbox:
+        return img.crop(bbox)
+    return img
 
 
 def generate_package(
@@ -292,31 +334,83 @@ def generate_package(
     favicon_path: str,
     base_name: str = "favicon",
     auto_theme: bool = False,
+    trim: bool = True,
 ):
     """Orchestrates the generation of a full favicon package."""
     os.makedirs(output_dir, exist_ok=True)
 
+    # Process source image (trim transparency to avoid "stumpy" icons)
+    working_image_path = input_image
+    if trim:
+        try:
+            with Image.open(input_image) as img:
+                trimmed = trim_image(img)
+                working_image_path = os.path.join(output_dir, "_tmp_trimmed_source.png")
+                trimmed.save(working_image_path)
+                logger.info("Trimmed transparent borders from source image.")
+        except Exception as e:
+            logger.warning(f"Failed to trim image: {e}. Proceeding with original.")
+
     if auto_theme or theme_color is None:
-        theme_color = extract_dominant_color(input_image)
+        theme_color = extract_dominant_color(working_image_path)
         logger.info(f"Auto-detected theme color: {theme_color}")
 
     if not validate_color_hex(theme_color) or not validate_color_hex(bg_color):
         return False
 
-    # 1. Multi-resolution ICO
-    generate_favicon_ico(input_image, os.path.join(output_dir, f"{base_name}.ico"))
+    # Convert bg_color hex to RGBA tuple for image generation
+    bg_rgb = hex_to_rgb(bg_color)
+    bg_rgba = bg_rgb + (255,) # Add full opacity
 
-    # 2. Apple Touch Icon
-    generate_apple_touch_icon(input_image, os.path.join(output_dir, "apple-touch-icon.png"))
+    # 1. Multi-resolution ICO - Fallback (Transparent)
+    generate_favicon_ico(working_image_path, os.path.join(output_dir, f"{base_name}.ico"), (0, 0, 0, 0))
 
-    # 3. Standard PNG/WebP/SVG variants
+    # 2. Apple Touch Icon - Solid background (Standard for iOS)
+    generate_apple_touch_icon(working_image_path, os.path.join(output_dir, "apple-touch-icon.png"), bg_rgba)
+
+    # 3. Standard PNG variants (Transparent)
     generate_image_variants(
-        input_image,
+        working_image_path,
         output_dir,
-        formats=["png", "webp", "svg"],
-        sizes=[(32, 32), (96, 96)],
+        formats=["png"],
+        sizes=[(32, 32)],
+        keep_original=False,
+        base_name=base_name,
+        background_color=(0, 0, 0, 0)
+    )
+
+    # 4. Future-proof WebP variants (Transparent)
+    generate_image_variants(
+        working_image_path,
+        output_dir,
+        formats=["webp"],
+        sizes=[(32, 32)],
+        keep_original=False,
+        base_name=base_name,
+        background_color=(0, 0, 0, 0)
+    )
+
+    # 5. Web Manifest Icons (Solid background)
+    generate_image_variants(
+        working_image_path,
+        output_dir,
+        formats=["png"],
+        sizes=[(192, 192), (512, 512)],
+        keep_original=False,
+        base_name="web-app-manifest",
+        background_color=bg_rgba
+    )
+
+    # 6. SVG (Vector)
+    # Re-use existing variants logic to generate the SVG
+    generate_image_variants(
+        working_image_path,
+        output_dir,
+        formats=["svg"],
+        sizes=[],
         keep_original=True,
         base_name=base_name,
+        background_color=(0, 0, 0, 0)
     )
 
     # 4. Manifest
@@ -331,6 +425,10 @@ def generate_package(
 
     # 5. HTML Code
     generate_html_metadata(output_dir, favicon_path)
+
+    # Cleanup temp trimmed image
+    if trim and os.path.exists(working_image_path):
+        os.remove(working_image_path)
 
     return True
 
@@ -359,7 +457,7 @@ def run_wizard():
 
     success = generate_package(
         input_image, DEFAULT_OUTPUT_DIR, site_name, short_name, 
-        None, bg_color, fav_path, auto_theme=True
+        None, bg_color, fav_path, auto_theme=True, trim=True
     )
     
     if success:
@@ -383,6 +481,7 @@ def main():
     parser.add_argument("--bg_color", default="#ffffff", help="Background color (hex).")
     parser.add_argument("--favicon_path", default=DEFAULT_FAVICON_PATH, help="Web path for favicons.")
     parser.add_argument("--auto", action="store_true", help="Auto-extract theme color.")
+    parser.add_argument("--no_trim", action="store_false", dest="trim", default=True, help="Do not trim transparent borders.")
 
     if len(sys.argv) == 1:
         run_wizard()
@@ -399,7 +498,7 @@ def main():
     if args.favicon_package:
         generate_package(
             args.input_image, args.output_dir, args.site_name, args.short_name,
-            args.theme_color, args.bg_color, args.favicon_path, args.name, args.auto
+            args.theme_color, args.bg_color, args.favicon_path, args.name, args.auto, args.trim
         )
     else:
         # Single format/size generation

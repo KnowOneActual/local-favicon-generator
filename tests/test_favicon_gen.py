@@ -69,3 +69,33 @@ def test_generate_package():
     assert os.path.exists(os.path.join(TEST_OUTPUT_DIR, "favicon.ico"))
     assert os.path.exists(os.path.join(TEST_OUTPUT_DIR, "site.webmanifest"))
     assert os.path.exists(os.path.join(TEST_OUTPUT_DIR, "favicon-tags.html"))
+
+def test_squish_protection():
+    # Create a very wide image
+    wide_input = "tests/wide_input.png"
+    img = Image.new("RGBA", (1000, 500), (255, 0, 0, 255))
+    img.save(wide_input)
+    
+    out_path = os.path.join(TEST_OUTPUT_DIR, "apple-touch-icon-wide.png")
+    os.makedirs(TEST_OUTPUT_DIR, exist_ok=True)
+    
+    # Generate apple touch icon (180x180)
+    favicon_gen.generate_apple_touch_icon(wide_input, out_path)
+    
+    with Image.open(out_path) as out_img:
+        assert out_img.size == (180, 180)
+        # The red area should be 180x90, so at y=0 it should be transparent (or bg color)
+        # By default bg is (0,0,0,0) in the function
+        assert out_img.getpixel((90, 10)) == (0, 0, 0, 0) # Padding area
+        assert out_img.getpixel((90, 90)) == (255, 0, 0, 255) # Red area
+    
+    # Check ICO as well
+    ico_path = os.path.join(TEST_OUTPUT_DIR, "favicon-wide.ico")
+    favicon_gen.generate_favicon_ico(wide_input, ico_path)
+    with Image.open(ico_path) as ico_img:
+        # Check the 32x32 frame (Modern fallback size)
+        assert ico_img.size == (32, 32)
+        assert ico_img.getpixel((16, 4)) == (0, 0, 0, 0) # Padding
+        assert ico_img.getpixel((16, 16)) == (255, 0, 0, 255) # Red
+    
+    os.remove(wide_input)
