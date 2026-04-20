@@ -1,8 +1,8 @@
-# Local Favicon Generator
-
 <p align="center">
   <img src="assets/img/logo/logo.webp" alt="Local Favicon Generator Logo" width="200" height="200">
 </p>
+
+# Local Favicon Generator
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="Python Version">
@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/maintained-yes-blue.svg" alt="Maintained">
 </p>
 
-Generate complete favicon packages locally — no external services required. Follows modern 2025 best practices (SVG primary, PNG/WebP fallbacks, PWA support) entirely offline.
+Generate complete favicon packages locally: no external services required. Follows modern 2025 best practices (SVG primary, PNG/WebP fallbacks, PWA support) entirely offline. Similar to how [Real Favicon Generator.net](https://realfavicongenerator.net) functions. 
 
 ## Features
 
