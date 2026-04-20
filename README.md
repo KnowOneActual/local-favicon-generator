@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/maintained-yes-blue.svg" alt="Maintained">
 </p>
 
-Generate complete favicon packages locally: no external services required. Follows modern 2025 best practices (SVG primary, PNG/WebP fallbacks, PWA support) entirely offline. Similar to how [Real Favicon Generator.net](https://realfavicongenerator.net) functions. 
+Generate complete favicon packages locally: no external services required. Follows modern best practices (SVG primary, PNG/WebP fallbacks, PWA support) entirely offline. Similar to how [Real Favicon Generator.net](https://realfavicongenerator.net) functions. 
 
 ## Features
 
