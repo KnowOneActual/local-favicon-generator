@@ -106,8 +106,7 @@ def parse_size_string(size_str: str) -> Tuple[int, int]:
         return int(width_str), int(height_str)
     except ValueError:
         raise argparse.ArgumentTypeError(
-            "Invalid size format: '{size_str}'. "
-            "Expected format like 'WIDTHxHEIGHT'."
+            "Invalid size format: '{size_str}'. Expected format like 'WIDTHxHEIGHT'."
         )
 
 
@@ -226,9 +225,7 @@ def generate_site_webmanifest(
         return False
 
 
-def generate_html_metadata(
-    output_dir: str, favicon_dir: str = DEFAULT_FAVICON_PATH
-) -> bool:
+def generate_html_metadata(output_dir: str, favicon_dir: str = DEFAULT_FAVICON_PATH) -> bool:
     """Generate HTML snippet following modern 2025 best practices."""
     try:
         # 1. SVG is the primary modern format (scalable, dark mode support)
@@ -522,9 +519,7 @@ def main():
     based on the parsed arguments.
     """
     parser = argparse.ArgumentParser(
-        description=(
-            "Generate an image in multiple formats and sizes for favicons."
-        )
+        description=("Generate an image in multiple formats and sizes for favicons.")
     )
     parser.add_argument(
         "input_image",
