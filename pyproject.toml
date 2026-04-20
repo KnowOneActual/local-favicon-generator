@@ -1,0 +1,21 @@
+[project]
+name = "local-favicon-generator"
+version = "1.0.1"
+description = "A locally hosted tool to generate full favicon packages similar to RealFaviconGenerator.net."
+readme = "README.md"
+requires-python = ">=3.7"
+license = { text = "MIT" }
+dependencies = [
+    "Pillow>=10.0.0",
+]
+
+[project.scripts]
+favicon-gen = "favicon_gen:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["favicon_gen.py"]
