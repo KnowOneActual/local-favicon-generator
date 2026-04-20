@@ -172,6 +172,22 @@ image_generator/
 └── README.md
 ```
 
+## Development & CI/CD
+
+This project adheres to high code quality and security standards, enforced through various automated tools integrated into the Continuous Integration (CI) pipeline.
+
+- **Linting & Formatting (Ruff):** We use [Ruff](https://beta.ruff.rs/docs/) for blazing-fast Python linting and code formatting. Ruff helps maintain code consistency and catches common errors.
+    -   To run locally: `ruff check .` and `ruff format --check .`
+- **Security Scanning (Bandit & Safety):**
+    -   [Bandit](https://bandit.readthedocs.io/en/latest/) is used to find common security issues in Python code.
+    -   [Safety](https://pyup.io/safety/) checks installed dependencies for known security vulnerabilities.
+- **Testing & Coverage (Pytest & Pytest-Cov):**
+    -   [Pytest](https://docs.pytest.org/en/stable/) is our chosen testing framework.
+    -   [Pytest-Cov](https://pytest-cov.readthedocs.io/en/latest/) provides test coverage reports, ensuring adequate test coverage for the codebase.
+    -   To run tests locally: `pytest tests/`
+    -   To run tests with coverage: `pytest --cov=. --cov-report=xml tests/`
+- **Dependency Management (Dependabot):** [Dependabot](https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/about-dependabot-security-updates) is enabled on this repository to automatically keep dependencies updated and secure.
+
 ## Requirements
 
 - Python 3.7+

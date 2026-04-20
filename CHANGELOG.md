@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Integrated Ruff for Python linting and code formatting.
+- Implemented security scanning with Bandit for code analysis and Safety for dependency vulnerability checks.
+- Added test coverage reporting using pytest-cov.
+- Enabled Dependabot for automated dependency updates.
 - Modern 2025 "Bulletproof" favicon package support.
   - SVG as primary icon for modern browsers.
   - WebP future-proof fallback support.
