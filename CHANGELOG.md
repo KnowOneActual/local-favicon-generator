@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Resolved all Ruff linting issues, including docstring conventions and line-length errors (E501).
+- Updated Ruff configuration in `pyproject.toml` to use the new `[tool.ruff.lint]` section and ignore incompatible docstring rules (D203, D213).
+- Applied consistent code formatting across the project to ensure `ruff format --check .` passes in CI.
+
 ### Added
 - Integrated Ruff for Python linting and code formatting.
 - Implemented security scanning with Bandit for code analysis and Safety for dependency vulnerability checks.
